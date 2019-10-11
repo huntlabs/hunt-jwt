@@ -1,0 +1,11 @@
+{
+	"authors": [
+		"Zhang"
+	],
+	"description": "A minimal D application.",
+	"license": "proprietary",
+	"name": "simple",
+	"dependencies": {
+		"hunt-jwt" : {"path": "../../"}
+	}
+}
