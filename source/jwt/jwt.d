@@ -76,7 +76,11 @@ public:
     }
 
     void set(T)(string name, T data) {
-        this.data.object[name] = JSONValue(data);
+        static if(is(T == JSONValue)) {
+            this.data.object[name] = data;
+        } else {
+            this.data.object[name] = JSONValue(data);
+        }
     }
 
     /**
