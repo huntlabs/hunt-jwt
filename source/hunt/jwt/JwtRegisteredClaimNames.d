@@ -1,4 +1,4 @@
-module jwt.JwtRegisteredClaimNames;
+module hunt.jwt.JwtRegisteredClaimNames;
 
 //
 // Summary:

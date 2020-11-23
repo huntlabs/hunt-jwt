@@ -1,9 +1,17 @@
 {
 	"name": "hunt-jwt",
 	"authors": [
-		"Zelalem Mekonen"
+		"Oleh Havrys",
+		"Sergey Buth",
+		"Lionello Lunesu",
+		"Tomáš Chaloupka",
+		"Zelalem Mekonen",
+		"HuntLabs"
 	],
-	"description": "A Simple D implementation of JSON Web Tokens",
-	"copyright": "Copyright © 2016, Zelalem Mekonen",
-	"license": "MIT"
+	"description": "A D implementation of JSON Web Tokens",
+	"copyright": "Copyright © 2020, HuntLabs",
+	"license": "MIT",
+	"dependencies": {
+		"hunt-openssl": "~>1.0.1"
+	}
 }

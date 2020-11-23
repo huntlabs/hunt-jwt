@@ -9,6 +9,13 @@ A Simple D implementation of JSON Web Tokens. It's forked from https://github.co
 - HS256
 - HS384
 - HS512
+- RS256
+- RS384
+- RS512
+- ES256
+- ES384
+- ES512
+
 
 #### This library uses [semantic versioning 2.0.0][3]
 
@@ -29,7 +36,7 @@ A Simple D implementation of JSON Web Tokens. It's forked from https://github.co
 
         JSONValue user = ["id": JSONValue(60119), "uri": JSONValue("https://api.we.are/60119")];
 
-        Token token = new Token(JWTAlgorithm.HS512);
+        JwtToken token = new JwtToken(JwtAlgorithm.HS512);
 
         token.claims.exp = Clock.currTime.toUnixTime();
 
@@ -55,7 +62,7 @@ A Simple D implementation of JSON Web Tokens. It's forked from https://github.co
 
         try {
 
-            Token token = verify(encodedToken, "supersecret", [JWTAlgorithm.HS512, JWTAlgorithm.HS256]);
+            JwtToken token = JwtToken.verify(encodedToken, "supersecret");
 
             writeln(token.claims.getInt("id"));
 
@@ -103,7 +110,7 @@ A Simple D implementation of JSON Web Tokens. It's forked from https://github.co
 
     void main() {
 
-        Token token = new Token(JWTAlgorithm.NONE);
+        JwtToken token = new JwtToken(JwtAlgorithm.NONE);
 
         token.claims.exp = Clock.currTime.toUnixTime();
 
@@ -127,7 +134,7 @@ A Simple D implementation of JSON Web Tokens. It's forked from https://github.co
 
         try {
 
-            Token token = verify(encodedToken);
+            JwtToken token = JwtToken.verify(encodedToken);
 
             writeln(token.claims.getInt("id"));
 
