@@ -1,11 +1,15 @@
 {
 	"authors": [
-		"Zhang"
+		"HuntLabs"
 	],
 	"description": "A minimal D application.",
 	"license": "proprietary",
 	"name": "simple",
+	"versions" : [
+		"HUNT_JWT_DEBUG"
+	],
 	"dependencies": {
-		"hunt-jwt" : {"path": "../../"}
+		"hunt-jwt" : {"path": "../../"},
+		"hunt" : "~>1.6.6"
 	}
 }

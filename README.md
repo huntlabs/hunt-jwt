@@ -161,3 +161,4 @@ this library uses code and ideas from [jwtd][1] and [jwt-go][2]
 [2]: https://github.com/dgrijalva/jwt-go
 [3]: http://semver.org
 [4]: https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
+[5]: https://github.com/benmcollins/libjwt

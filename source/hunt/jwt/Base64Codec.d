@@ -15,6 +15,6 @@ string urlsafeB64Encode(string inp) pure nothrow {
 /**
  * Decode a string with URL-safe Base64.
  */
-string urlsafeB64Decode(string inp) pure {
-	return cast(string)Base64URLNoPadding.decode(inp);
+ubyte[] urlsafeB64Decode(string inp) pure {
+	return Base64URLNoPadding.decode(inp);
 }

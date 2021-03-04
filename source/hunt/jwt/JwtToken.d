@@ -14,6 +14,9 @@ import std.datetime;
 import std.json;
 import std.string;
 
+import hunt.logging;
+
+
 /**
 * represents a token
 */
@@ -75,7 +78,8 @@ private {
         string token = this.data ~ "." ~ this.signature(secret);
 
         version(HUNT_AUTH_DEBUG) {
-            tracef("secret: %s, token: %s", secret, token);
+            import std.stdio;
+            writeln("secret: %s, token: %s", secret, token);
         }
 
         return token;
@@ -113,7 +117,7 @@ private {
         import std.conv : to;
         import std.uni : toUpper;
 
-        version(HUNT_AUTH_DEBUG) {
+        version(HUNT_JWT_DEBUG) {
             tracef("token: %s", token);
         }
 
@@ -124,7 +128,7 @@ private {
 
         JSONValue header;
         try {
-            header = parseJSON(urlsafeB64Decode(tokenParts[0]));
+            header = parseJSON(cast(string)urlsafeB64Decode(tokenParts[0]));
         } catch(Exception e) {
             throw new VerifyException("Header is incorrect.");
         }
@@ -144,13 +148,13 @@ private {
         }
 
         const key = lazyKey(header);
-        if(!key.empty() && !verifySignature(urlsafeB64Decode(tokenParts[2]), tokenParts[0]~"."~tokenParts[1], key, alg))
+        if(!key.empty() && !verifySignature(tokenParts[0]~"."~tokenParts[1], tokenParts[2], key, alg))
             throw new VerifyException("Signature is incorrect.");
 
         JSONValue payload;
 
         try {
-            payload = parseJSON(urlsafeB64Decode(tokenParts[1]));
+            payload = parseJSON(cast(string)urlsafeB64Decode(tokenParts[1]));
         } catch(JSONException e) {
             // Code coverage has to miss this line because the signature test above throws before this does
             throw new VerifyException("Payload JSON is incorrect.");
@@ -177,7 +181,7 @@ private {
 
         string[] tokenParts = split(token, ".");
 
-        string decHeader = urlsafeB64Decode(tokenParts[0]);
+        string decHeader = cast(string)urlsafeB64Decode(tokenParts[0]);
         JSONValue header = parseJSON(decHeader);
 
         JwtAlgorithm alg;
@@ -194,7 +198,7 @@ private {
                 throw new VerifyException("Type is incorrect.");
         }
 
-        return verifySignature(urlsafeB64Decode(tokenParts[2]), tokenParts[0]~"."~tokenParts[1], key, alg);
+        return verifySignature(tokenParts[0]~"."~tokenParts[1], tokenParts[2], key, alg);
     }
 }
 

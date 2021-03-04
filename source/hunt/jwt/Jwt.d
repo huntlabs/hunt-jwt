@@ -11,6 +11,9 @@ import std.algorithm;
 import std.array : split;
 
 
+import hunt.logging;
+
+
 /**
   simple version that accepts only strings as values for payload and header fields
 */
@@ -50,6 +53,27 @@ string encode(in ubyte[] payload, string key, JwtAlgorithm algo = JwtAlgorithm.H
 	string encodedPayload = Base64URLNoPadding.encode(payload);
 
 	string signingInput = encodedHeader ~ "." ~ encodedPayload;
+	string signValue = sign(signingInput, key, algo);
+
+    version(HUNT_JWT_DEBUG) {
+		tracef("sign: %(%02X %)", cast(ubyte[])signValue);
+	}
+
+	string signature = Base64URLNoPadding.encode(cast(ubyte[])sign(signingInput, key, algo));
+	return signingInput ~ "." ~ signature;
+}
+
+// string fromDER(string data) {
+	
+// }
+
+string encode(string payload, string key, JwtAlgorithm algo, 
+		string header_fields) {
+
+	string encodedHeader = Base64URLNoPadding.encode(cast(ubyte[])header_fields); // memoize!(getEncodedHeader, 64)(algo, header_fields);
+	string encodedPayload = Base64URLNoPadding.encode(cast(ubyte[])payload);
+
+	string signingInput = encodedHeader ~ "." ~ encodedPayload;
 	string signature = Base64URLNoPadding.encode(cast(ubyte[])sign(signingInput, key, algo));
 
 	return signingInput ~ "." ~ signature;
@@ -78,7 +102,7 @@ JSONValue decode(string token, string delegate(ref JSONValue jose) lazyKey) {
 
 	JSONValue header;
 	try {
-		header = parseJSON(urlsafeB64Decode(tokenParts[0]));
+		header = parseJSON(cast(string)urlsafeB64Decode(tokenParts[0]));
 	} catch(Exception e) {
 		throw new VerifyException("Header is incorrect.");
 	}
@@ -98,13 +122,13 @@ JSONValue decode(string token, string delegate(ref JSONValue jose) lazyKey) {
 	}
 
 	const key = lazyKey(header);
-	if(!verifySignature(urlsafeB64Decode(tokenParts[2]), tokenParts[0]~"."~tokenParts[1], key, alg))
+	if(!verifySignature(tokenParts[0]~"."~tokenParts[1], tokenParts[2], key, alg))
 		throw new VerifyException("Signature is incorrect.");
 
 	JSONValue payload;
 
 	try {
-		payload = parseJSON(urlsafeB64Decode(tokenParts[1]));
+		payload = parseJSON(cast(string)urlsafeB64Decode(tokenParts[1]));
 	} catch(JSONException e) {
 		// Code coverage has to miss this line because the signature test above throws before this does
 		throw new VerifyException("Payload JSON is incorrect.");

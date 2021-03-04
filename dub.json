@@ -9,9 +9,9 @@
 		"HuntLabs"
 	],
 	"description": "A D implementation of JSON Web Tokens",
-	"copyright": "Copyright © 2020, HuntLabs",
+	"copyright": "Copyright © 2021, HuntLabs",
 	"license": "MIT",
 	"dependencies": {
-		"hunt-openssl": "~>1.0.1"
+		"hunt-openssl": "~>1.0.4"
 	}
 }
