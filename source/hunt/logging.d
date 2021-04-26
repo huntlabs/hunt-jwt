@@ -1,6 +1,6 @@
 module hunt.logging;
 
-version(HUNT_JWT_DEBUG) :
+// version(HUNT_JWT_DEBUG) :
 
 import core.stdc.stdlib;
 import core.runtime;
