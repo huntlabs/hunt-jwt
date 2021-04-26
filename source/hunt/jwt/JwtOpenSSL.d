@@ -15,6 +15,7 @@ import std.conv;
 import std.range;
 
 import core.stdc.stdlib : alloca;
+import core.stdc.config : c_long;
 
 string sign(string msg, string key, JwtAlgorithm algo = JwtAlgorithm.HS256) {
     ubyte[] sign;
@@ -103,10 +104,12 @@ version(HUNT_JWT_DEBUG) {
 }
 
 // Ported from https://github.com/benmcollins/libjwt/blob/master/libjwt/jwt-openssl.c
-private static ubyte[] signShaPem(const(EVP_MD) *alg, int type, string key, string msg) {
+private ubyte[] signShaPem(const(EVP_MD) *alg, int type, string key, string msg) {
     BIO * bufkey = BIO_new_mem_buf(cast(void*)key.ptr, cast(int)key.length);
     if(bufkey is null) {
-        throw new Exception("Can't load the private key.");
+        // throw new Exception("Can't load the private key.");
+        warning("Can't load the private key.");
+        return null;
     }
     scope(exit) BIO_free(bufkey);
 
@@ -114,32 +117,44 @@ private static ubyte[] signShaPem(const(EVP_MD) *alg, int type, string key, stri
 	 * library caller can override this in many ways, all of which are
 	 * outside of the scope of LibJWT and this is documented in jwt.h. */
 	EVP_PKEY *pkey = PEM_read_bio_PrivateKey(bufkey, null, null, null);
-	if (pkey is null)
-        throw new Exception("Invalid argument");
+	if (pkey is null) {
+        warning("Invalid argument");
+        return null;
+    }
     scope(exit) EVP_PKEY_free(pkey);
 
 	int pkey_type = EVP_PKEY_id(pkey);
-	if (pkey_type != type)
-        throw new Exception("Invalid argument");
+	if (pkey_type != type){
+        warning("Invalid argument");
+        return null;
+    }
 
 	EVP_MD_CTX *mdctx = EVP_MD_CTX_create();
-	if (mdctx is null)
-        throw new Exception("Out of memory");
+	if (mdctx is null){
+        warning("Out of memory");
+        return null;
+    }
     scope(exit) EVP_MD_CTX_destroy(mdctx);
 
 	/* Initialize the DigestSign operation using alg */
-	if (EVP_DigestSignInit(mdctx, null, alg, null, pkey) != 1)
-        throw new Exception("Invalid argument");
+	if (EVP_DigestSignInit(mdctx, null, alg, null, pkey) != 1){
+        warning("Invalid argument");
+        return null;
+    }
 
 	/* Call update with the message */
-	if (EVP_DigestSignUpdate(mdctx, cast(void*)msg.ptr, msg.length) != 1)
-        throw new Exception("Invalid argument");
+	if (EVP_DigestSignUpdate(mdctx, cast(void*)msg.ptr, msg.length) != 1){
+        warning("Invalid argument");
+        return null;
+    }
 
 	/* First, call EVP_DigestSignFinal with a null sig parameter to get length
 	 * of sig. Length is returned in slen */
     size_t slen;
-	if (EVP_DigestSignFinal(mdctx, null, &slen) != 1)
-        throw new Exception("Invalid argument");
+	if (EVP_DigestSignFinal(mdctx, null, &slen) != 1){
+        warning("Invalid argument");
+        return null;
+    }
 
 	/* Allocate memory for signature based on returned size */
     // FIXME: Needing refactor or cleanup -@zhangxueping at 2021-03-03T19:38:11+08:00
@@ -148,8 +163,10 @@ private static ubyte[] signShaPem(const(EVP_MD) *alg, int type, string key, stri
     ubyte* sig = cast(ubyte*)alloca(slen);
 
 	/* Get the signature */
-	if (EVP_DigestSignFinal(mdctx, sig, &slen) != 1)
-        throw new Exception("Invalid argument");
+	if (EVP_DigestSignFinal(mdctx, sig, &slen) != 1) {
+        warning("Invalid argument");
+        return null;
+    }
 
     ubyte[] resultSig;
 
@@ -162,8 +179,10 @@ private static ubyte[] signShaPem(const(EVP_MD) *alg, int type, string key, stri
 
 		/* Get the actual ec_key */
 		EC_KEY *ec_key = EVP_PKEY_get1_EC_KEY(pkey);
-		if (ec_key is null)
-            throw new Exception("Out of memory");
+		if (ec_key is null) {
+            warning("Out of memory");
+            return null;
+        }
 
 		degree = EC_GROUP_get_degree(EC_KEY_get0_group(ec_key));
 
@@ -177,9 +196,11 @@ private static ubyte[] signShaPem(const(EVP_MD) *alg, int type, string key, stri
         // FIXME: Needing refactor or cleanup -@zhangxueping at 2021-03-03T19:39:16+08:00
         // Crashed here
         // ECDSA_SIG *ec_sig = d2i_ECDSA_SIG(null, cast(const(ubyte) **)sig.ptr, cast(long)slen);
-		ECDSA_SIG *ec_sig = d2i_ECDSA_SIG(null, cast(const(ubyte) **)&sig, cast(long)slen);
-		if (ec_sig is null)
-            throw new Exception("Can't decode ECDSA signature.");
+		ECDSA_SIG *ec_sig = d2i_ECDSA_SIG(null, cast(const(ubyte) **)&sig, cast(c_long)slen);
+		if (ec_sig is null) {
+            warning("Can't decode ECDSA signature.");
+            return null;
+        }
         scope(exit) ECDSA_SIG_free(ec_sig);
             
         // version(HUNT_JWT_DEBUG) {
@@ -192,8 +213,10 @@ private static ubyte[] signShaPem(const(EVP_MD) *alg, int type, string key, stri
 		r_len = BN_num_bytes(ec_sig_r);
 		s_len = BN_num_bytes(ec_sig_s);
 		bn_len = (degree + 7) / 8;
-		if ((r_len > bn_len) || (s_len > bn_len))
-            throw new Exception("Invalid argument");
+		if ((r_len > bn_len) || (s_len > bn_len)){
+            warning("Invalid argument");
+            return null;
+        }
 
 		buf_len = 2 * bn_len;
         ubyte[] raw_buf = new ubyte[buf_len];
